@@ -10,6 +10,8 @@ class GameActor {
     this.id = config.id; // unique id for back-end syncing
     this.p = config.p; // p5 instance
 
+    this.game = config.game;
+
     // for players
     this.disconnected = false;
 
@@ -29,6 +31,7 @@ class GameActor {
   }
 
   async loadImages() {
+    console.log("Loading images for actor: ", this.id);
     // Create an array of promises for each image
     const imagePromises = this.imageNames.map(async (imageName, i) => {
       const loadedImg = await loadImageAsync(this.p, imageName);

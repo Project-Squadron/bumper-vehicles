@@ -12,12 +12,20 @@ class KeyManager extends InputManager {
 
     // registered actions
     this.actions = {};
+    
+    // key press callbacks
+    this.keyPressCallbacks = new Map();
   }
 
   // registers labeled actions: effectively associates a key code 
   // with a string such as "jump"
   register(action, keyCode) {
     this.actions[action] = keyCode;
+  }
+
+  // Register a callback for when a key is pressed
+  onKeyPress(key, callback) {
+    this.keyPressCallbacks.set(key, callback);
   }
 
   // checks if the 'selector' key is being pressed
@@ -35,6 +43,12 @@ class KeyManager extends InputManager {
   // activates a key
   keyPressed(keyCode) {
     this.current[keyCode] = true;
+    
+    // Check if there's a callback for this key
+    const callback = this.keyPressCallbacks.get(keyCode);
+    if (callback) {
+      callback();
+    }
   }
 
   // deactivates a key

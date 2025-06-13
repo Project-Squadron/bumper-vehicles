@@ -143,6 +143,25 @@ const player_game_map = new Map();
 // dicitonary: socket_id --> game
 const socket_game_map = new Map();
 
+// Generate a random string of specified length
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
+
+// Generate a unique player ID that's not in the player_game_map
+function generateUniquePlayerId() {
+  let playerId;
+  do {
+    playerId = generateRandomString(10);
+  } while (player_game_map.has(playerId));
+  return playerId;
+}
+
 //////////////////////////////////////////////////
 // Socket.io Connection Handling                //
 //////////////////////////////////////////////////
@@ -190,6 +209,8 @@ io.on('connection', (socket) => {
     const gameType = data.gameType;
     const userData = data.userData;
 
+    console.log("Printing games: ", games_in_queue, active_games);
+
     let game;
     if (games_in_queue[gameType]) {
       game = games_in_queue[gameType];
@@ -198,11 +219,14 @@ io.on('connection', (socket) => {
       games_in_queue[gameType] = game;
     }
 
-    const { player, shouldStartGame } = game.addPlayer(socket.id, userData);
-    player_game_map.set(player.id, game);
+    // Generate unique player ID before adding to game
+    const playerId = generateUniquePlayerId();
+    const { player, shouldStartGame } = game.addPlayer(socket.id, userData, playerId);
+    
+    player_game_map.set(playerId, game);
     socket_game_map.set(socket.id, game);
-    console.log(`Player ${player.id} joined ${gameType} game`);
-    socket.emit('player-id', player.id);
+    console.log(`Player ${playerId} joined ${gameType} game`);
+    socket.emit('player-id', playerId);
 
     if (shouldStartGame) {
       console.log('Starting race game with required players');
@@ -236,7 +260,6 @@ io.on('connection', (socket) => {
       }
     } else {
       console.log('Game not found for player:', data.playerId);
-      socket.emit('game_not_found', { playerId: data.playerId });
       socket.disconnect();
     }
   });
@@ -266,9 +289,16 @@ const PHYSICS_UPDATE_INTERVAL = 1000 / 60;
 // Start physics update loop
 setInterval(() => {
   // Update all active games
-  active_games.forEach(game => {
+  for (let i = active_games.length - 1; i >= 0; i--) {
+    const game = active_games[i];
     game.update(io);
-  });
+    
+    // Remove inactive games
+    if (game.state === 'inactive') {
+      console.log(`Removing inactive game at index ${i}`);
+      active_games.splice(i, 1);
+    }
+  }
 }, PHYSICS_UPDATE_INTERVAL);
 
 //////////////////////////////////////////////////

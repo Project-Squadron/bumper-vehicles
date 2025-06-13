@@ -1,6 +1,7 @@
 import keyManager from '../EventObjects/KeyManager.js';
 import socket from '../networking/socket.js';
 import DynamicActor from './DynamicActor.js';
+import { loadImageAsync } from '../utils/images.js';
 
 export class PlayerActor extends DynamicActor {
   constructor(config) {
@@ -16,6 +17,12 @@ export class PlayerActor extends DynamicActor {
 
     this.isLocalPlayer = config.isLocalPlayer;
     this.socket_id = config.socket_id || null;
+
+    // Store powerup names from userData
+    this.powerups = config.powerups || [];
+    
+    // Map to store loaded powerup images
+    this.powerup_images = new Map();
 
     // if isLocalPlayer is true, then we will use these
     this.inputs = {
@@ -35,11 +42,27 @@ export class PlayerActor extends DynamicActor {
     this.radius = config.radius;
   }
 
+  async loadImages() {
+    await super.loadImages();
+
+    if (!this.isLocalPlayer) return;
+    
+    // Load powerup images
+    for (const powerupName of this.powerups) {
+      try {
+        const imagePath = this.game.powerupImages.get(powerupName);
+        const loadedImg = await loadImageAsync(this.p, imagePath);
+        this.powerup_images.set(powerupName, loadedImg);
+      } catch (error) {
+        console.error("Failed to load powerup image:", powerupName, error);
+      }
+    }
+  }
+
   /**
    * Update the player's input state
    */
   updateInputs() {
-    console.log("Testing 1: ", keyManager.pressed('one'));
     this.inputs = {
       up: keyManager.pressed('up'),
       down: keyManager.pressed('down'),

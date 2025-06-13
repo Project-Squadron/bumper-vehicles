@@ -34,6 +34,7 @@ keyManager.register("two", "2");
 keyManager.register("three", "3");
 keyManager.register("four", "4");
 keyManager.register("five", "5");
+keyManager.register('z', 'z');
 
 /////////////////////////////////////////////////////
 // Register Button Shape Types

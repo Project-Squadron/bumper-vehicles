@@ -51,6 +51,7 @@ mapManager.createScript('race', 'example-race-map', [
   { type: 'spawn_point', parameters: { position: new Vec2(500, 300) } },
   { type: 'spawn_point', parameters: { position: new Vec2(200, 300) } },
   { type: 'block', parameters: { position: new Vec2(50, 50), size: new Vec2(50, 50) } },
+  // { type: 'block', parameters: { position: new Vec2(100, 50), size: new Vec2(50, 50) } },
   { type: 'block', parameters: { position: new Vec2(150, 50), size: new Vec2(50, 50) } },
   { type: 'bouncy_ball', parameters: { position: new Vec2(250, 150), radius: 25 } },
   { type: 'bouncy_ball', parameters: { position: new Vec2(150, 150), radius: 25 } }

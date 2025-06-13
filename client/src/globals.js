@@ -11,7 +11,7 @@ function updateGameInfo(newInfo) {
 }
 
 const userData = {
-  powerups: ["mine", "bomb", "missle", "green_shell", "red_shell"],
+  powerups: ["mine", "missile", "heart"],
 };
 
 export { gameInfo, updateGameInfo, userData };

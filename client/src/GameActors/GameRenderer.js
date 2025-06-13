@@ -3,6 +3,8 @@ import { PlayerActor } from "../GameActors/PlayerActor.js";
 import { BlockActor } from './BlockActor.js';
 import { BouncyBallActor } from './BouncyBallActor.js';
 import sceneManager from "../EventObjects/SceneManager.js";
+import keyManager from '../EventObjects/KeyManager.js';
+import { userData } from "../globals.js";
 
 function showReconnectingOverlay() {
   const container = document.createElement('div');
@@ -62,6 +64,13 @@ class GameRenderer {
       ['bouncy_ball', BouncyBallActor]
     ]);
 
+    // Powerup image mapping
+    this.powerupImages = new Map([
+      ['mine', 'Powerups/mine.png'],
+      ['missile', 'Powerups/missile.png'],
+      ['heart', 'Powerups/heart.png']
+    ]);
+
     // initalized on setup
     this.p = null; // p5.js instance
     this.localPlayer = null;
@@ -74,11 +83,17 @@ class GameRenderer {
     this.max_reconnect_attempts = 5;
     this.reconnect_interval = 1000; // 1 second
     this.ableToReconnect = true;
+
+    this.popUpY = null;
+    this.footerHeight = 100;
+    this.activatePopUp = false;
+    this.powerupIcons = new Map(); // Store loaded powerup images
   }
 
   async setup(p5Instance, gameInfo) {
     // initalize game state
     this.p = p5Instance;
+    this.popUpY = this.p.height;
     this.game_type = gameInfo.game_type;
     this.socket_id = gameInfo.socket_id;
     this.player_id = gameInfo.player_id;
@@ -96,7 +111,9 @@ class GameRenderer {
         y: player.y,
         radius: player.radius,
         id: player.id,
-        socket_id: this.socket_id
+        socket_id: this.socket_id,
+        powerups: userData.powerups,
+        game: this
       });
       if (player.id === this.player_id) {
         this.localPlayer = newPlayer;
@@ -115,7 +132,8 @@ class GameRenderer {
           y: actor.y,
           width: actor.width,
           height: actor.height,
-          id: actor.id
+          id: actor.id,
+          game: this
         });
         this.actors.push(newActor);
         this.id_actor_map.set(actor.id, newActor);
@@ -146,10 +164,54 @@ class GameRenderer {
       hideReconnectingOverlay();
       this.ableToReconnect = true;
     });
+
+    // Set up Z key press callback
+    keyManager.onKeyPress('z', () => {
+      this.activatePopUp = !this.activatePopUp;
+    });
+  }
+
+  displayFooter() {
+    if (this.activatePopUp) {
+      // Opening animation - smooth ease in
+      this.popUpY += ((this.p.height - this.footerHeight) - this.popUpY) / 5;
+    } else {
+      // Closing animation - starts slow, ends fast
+      const distanceToTarget = this.p.height - this.popUpY;
+      const speed = Math.max(0.1, distanceToTarget / 400); // Speed increases as it gets closer to target
+      this.popUpY += distanceToTarget * speed;
+    }
+
+    // Draw footer background
+    this.p.fill(100, 100, 100);
+    this.p.rect(0, this.popUpY, this.p.width, this.footerHeight);
+
+    // Draw powerup icons
+    if (this.localPlayer && this.localPlayer.powerups) {
+      const iconSize = 40;
+      const padding = 10;
+      const startX = padding;
+      const startY = this.popUpY + (this.footerHeight - iconSize) / 2;
+
+      this.localPlayer.powerups.forEach((powerupName, index) => {
+        const image = this.localPlayer.powerup_images.get(powerupName);
+        if (image) {
+          this.p.image(
+            image,
+            startX + (iconSize + padding) * index,
+            startY,
+            iconSize,
+            iconSize
+          );
+        }
+      });
+    }
   }
 
   update() {
     this.actors.forEach(actor => actor.update());
+
+    this.displayFooter();
   }
 
   async reinitializeGame() {
@@ -168,6 +230,7 @@ class GameRenderer {
 
       socket.on('game_not_found', () => {
         this.ableToReconnect = false;
+        console.log("game not found... leaving.");
         hideReconnectingOverlay();
         socket.disconnect();
         sceneManager.createTransition('map');

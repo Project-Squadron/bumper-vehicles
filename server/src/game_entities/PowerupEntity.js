@@ -13,16 +13,14 @@ export default class PowerUpEntity extends PhysicsEntity {
     this.position = position;
     console.log("Activating powerup at position: ", this.position);
 
+    this.size = new Vec2(25, 25);
 
 
-    // TODO:
-    // - update bouding box
-    // - register in actor lists in game
-    // - add to passive_actor list in game
+    this.flags = {
+      facing: 'right' // Can be 'left' or 'right'
+    };
 
-    // this.flags = {
-    //   facing: 'right' // Can be 'left' or 'right'
-    // };
+    this.game.passive_actors.push(this);
 
     // // register empty lsit
     if (this.type in this.game.actor_lists) {
@@ -43,7 +41,11 @@ export default class PowerUpEntity extends PhysicsEntity {
 
     // update X and check for collisions along the x-axis
     this.updateX();
+    this.boundingBox.updateX();
+
+    // update Y
     this.updateY();
+    this.boundingBox.updateY();
 
     // update state
     if (this.velocity.x > 0.1) {
