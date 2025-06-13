@@ -27,11 +27,11 @@ export class PlayerEntity extends PhysicsEntity {
     console.log("User data: ", config.userData);
     this.powerups = [];
     for (const powerup_name of config.userData.powerups) {
-      this.powerups.push(new PowerupEntity({ 
-        type: powerup_name, 
+      this.powerups.push(new PowerupEntity({
+        type: powerup_name,
         game: this.game,
         position: new Vec2(0, 0),
-        size: new Vec2(25, 25), 
+        size: new Vec2(25, 25),
         tileMap: this.tileMap
       }));
     }
